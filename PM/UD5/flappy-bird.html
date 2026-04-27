@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad: Flappy Bird en Godot 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1f2538;
+    --accent: #f7c948;
+    --accent2: #4fffb0;
+    --accent3: #ff6b6b;
+    --text: #e8eaf0;
+    --text-muted: #8892a4;
+    --border: #2a3048;
+    --step-bg: #12161f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    padding: 0 0 80px 0;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0f1117 0%, #1a1f35 50%, #0f1117 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 56px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(247,201,72,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  header h1 span { color: var(--accent); }
+  .header-meta {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .meta-pill strong { color: var(--accent2); }
+
+  /* MAIN LAYOUT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 56px 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* INTRO CARD */
+  .intro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-top: 40px;
+  }
+  .intro-card h2 {
+    font-size: 18px; font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--accent2);
+  }
+  .intro-card p { color: var(--text-muted); }
+
+  /* ESTRUCTURA DEL PROYECTO */
+  .structure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .structure-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .structure-item .folder-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .structure-item h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .structure-item ul {
+    list-style: none;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .structure-item ul li::before {
+    content: '→ ';
+    color: var(--border);
+  }
+
+  /* PASOS */
+  .step {
+    background: var(--step-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .step-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--accent);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-header-text h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .step-header-text p {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .step-body {
+    padding: 28px 32px;
+  }
+
+  /* INSTRUCCIONES DENTRO DE PASOS */
+  .instruccion {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .instruccion-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 28px;
+    padding-top: 2px;
+  }
+  .instruccion-text { flex: 1; }
+  .instruccion-text strong { color: var(--text); }
+  .instruccion-text p { color: var(--text-muted); font-size: 15px; }
+
+  /* TIPS */
+  .tip {
+    background: rgba(79,255,176,0.05);
+    border: 1px solid rgba(79,255,176,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .tip strong { color: var(--accent2); }
+
+  .warning {
+    background: rgba(255,107,107,0.06);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .warning strong { color: var(--accent3); }
+
+  /* CODE BLOCKS */
+  pre {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+  pre .lang-label {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .cmt { color: #6272a4; font-style: italic; }
+  .num { color: #bd93f9; }
+  .var { color: #8be9fd; }
+  .cls { color: #ffb86c; }
+
+  /* NODE TREE */
+  .node-tree {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    line-height: 2;
+    color: #c9d1d9;
+  }
+  .node-tree .node-name { color: var(--accent2); }
+  .node-tree .node-type { color: var(--text-muted); font-size: 11px; }
+  .node-tree .node-script { color: var(--accent); font-size: 11px; }
+
+  /* TABLA RESUMEN */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  td strong { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ACTIVIDADES EXTRA */
+  .extra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .extra-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .extra-card .dificultad {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .dif-1 { color: var(--accent2); }
+  .dif-2 { color: var(--accent); }
+  .dif-3 { color: var(--accent3); }
+  .extra-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .extra-card p { font-size: 13px; color: var(--text-muted); }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 20px; color: var(--text-muted); }
+  li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-tag">Actividad Práctica · Godot 4 · FP</div>
+    <h1>Construye tu propio<br><span>Flappy Bird</span> en Godot 4</h1>
+    <p style="color:var(--text-muted); max-width:600px;">
+      En esta actividad vas a montar paso a paso un clon de Flappy Bird desde cero,
+      entendiendo cada pieza del proyecto: escenas, scripts, físicas, señales y GUI.
+    </p>
+    <div class="header-meta">
+      <span class="meta-pill">Motor: <strong>Godot 4.x</strong></span>
+      <span class="meta-pill">Nivel: <strong>Principiante</strong></span>
+      <span class="meta-pill">Duración aprox.: <strong>3–4 horas</strong></span>
+      <span class="meta-pill">Lenguaje: <strong>GDScript</strong></span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro-card">
+    <h2>¿Qué vas a aprender?</h2>
+    <p>
+      Al terminar esta actividad habrás trabajado los conceptos fundamentales de Godot 4:
+      árbol de nodos, escenas reutilizables, CharacterBody2D, físicas 2D, señales, Autoload (Global),
+      Timer, Area2D, CanvasLayer para la interfaz y cómo reiniciar una partida.
+    </p>
+  </div>
+
+  <!-- ESTRUCTURA -->
+  <div class="section-title">Estructura del Proyecto</div>
+
+  <p style="color:var(--text-muted);">
+    Antes de empezar a crear nada, veamos cómo está organizado el proyecto terminado.
+    Así sabrás en todo momento dónde encaja cada cosa que vayas haciendo.
+  </p>
+
+  <div class="structure-grid">
+    <div class="structure-item">
+      <div class="folder-icon">🎨</div>
+      <h4>art/</h4>
+      <ul>
+        <li>sprites/ (imágenes PNG)</li>
+        <li>audio/ (sonidos WAV/OGG)</li>
+        <li>flappy-font.ttf</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">🎬</div>
+      <h4>scenes/</h4>
+      <ul>
+        <li>level.tscn (escena principal)</li>
+        <li>bird.tscn (el pájaro)</li>
+        <li>pipe.tscn (tubería simple)</li>
+        <li>pipe_game.tscn (par de tuberías)</li>
+        <li>gui.tscn (interfaz HUD)</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">📜</div>
+      <h4>scripts/</h4>
+      <ul>
+        <li>global.gd (Autoload)</li>
+        <li>bird.gd</li>
+        <li>level.gd</li>
+        <li>pipe_game.gd</li>
+        <li>gui.gd</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">⚙️</div>
+      <h4>Raíz</h4>
+      <ul>
+        <li>project.godot</li>
+        <li>icon.svg</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>💡 Concepto clave — Escena vs Script:</strong>
+    Una <em>escena</em> (.tscn) define la estructura visual y los nodos (como un "molde").
+    Un <em>script</em> (.gd) añade la lógica (el comportamiento) a esa estructura.
+    Casi siempre van de la mano.
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div class="section-title">Pasos de la Actividad</div>
+
+  <!-- PASO 1 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">01</div>
+      <div class="step-header-text">
+        <h3>Crea y configura el proyecto</h3>
+        <p>Crear el proyecto nuevo en Godot 4 con las dimensiones correctas</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.1</div>
+        <div class="instruccion-text">
+          <strong>Abre Godot 4 y crea un nuevo proyecto.</strong>
+          <p>Dale el nombre <code>flappy-bird</code>. Elige una carpeta vacía. En "Renderer" selecciona <strong>Compatibility</strong> (más ligero, ideal para 2D).</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.2</div>
+        <div class="instruccion-text">
+          <strong>Ajusta el tamaño de ventana.</strong>
+          <p>Ve a <strong>Proyecto → Configuración del Proyecto → Display → Window</strong>. Pon el ancho en <code>288</code> y el alto en <code>512</code>. En <strong>Stretch → Mode</strong> selecciona <code>canvas_items</code> para que escale bien.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.3</div>
+        <div class="instruccion-text">
+          <strong>Limita los FPS a 60.</strong>
+          <p>En la misma ventana, busca <strong>Application → Run</strong> y pon <code>max_fps = 60</code>. Esto evita que el juego vaya más rápido de lo esperado.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.4</div>
+        <div class="instruccion-text">
+          <strong>Importa los assets (arte y sonidos).</strong>
+          <p>Copia la carpeta <code>art/</code> del proyecto original dentro de tu carpeta de proyecto. Godot la detectará automáticamente en el FileSystem.</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Por qué 288×512?</strong>
+        Son las dimensiones originales del Flappy Bird para móvil.
+        Con el modo <code>canvas_items</code>, Godot escala todo automáticamente
+        sin que tengas que preocuparte por distintos tamaños de pantalla.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">02</div>
+      <div class="step-header-text">
+        <h3>Crea el script Global (Autoload)</h3>
+        <p>El cerebro central del juego: puntuación, estado y señales</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <p style="color:var(--text-muted); margin-bottom:20px;">
+        Un <strong>Autoload</strong> en Godot es un nodo/script que siempre está activo y accesible
+        desde cualquier parte del juego, sin tener que buscarlo en el árbol de escenas.
+        Lo usamos para compartir el estado del juego (puntuación, ¿ha empezado?, etc.).
+      </p>
+
+      <div class="instruccion">
+        <div class="instruccion-num">2.1</div>
+        <div class="instruccion-text">
+          <strong>Crea la carpeta <code>scripts/</code> en el FileSystem.</strong>
+          <p>Clic derecho en <code>res://</code> → Nueva carpeta → <code>scripts</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">2.2</div>
+        <div class="instruccion-text">
+          <strong>Crea el archivo <code>global.gd</code> dentro de scripts/.</strong>
+          <p>Clic derecho en la carpeta → Nuevo Script → nómbralo <code>global.gd</code>. Borra el contenido por defecto y escribe el siguiente código:</p>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="cmt"># global.gd — Autoload: compartido en todo el juego</span>
+<span class="kw">extends</span> <span class="cls">Node</span>
+
+<span class="cmt"># Señales: eventos que otros nodos pueden escuchar</span>
+<span class="kw">signal</span> on_increment_score
+<span class="kw">signal</span> on_game_start
+<span class="kw">signal</span> on_game_over
+
+<span class="cmt"># Variables de estado</span>
+<span class="kw">var</span> <span class="var">score</span> := <span class="num">0</span>
+<span class="kw">var</span> <span class="var">is_start</span> := <span class="kw">false</span>
+
+<span class="kw">func</span> <span class="fn">game_start</span>():
+    <span class="var">is_start</span> = <span class="kw">true</span>
+    <span class="var">score</span> = <span class="num">0</span>
+    <span class="fn">emit_signal</span>(<span class="str">"on_increment_score"</span>)
+    <span class="fn">emit_signal</span>(<span class="str">"on_game_start"</span>)
+
+<span class="kw">func</span> <span class="fn">increment_score</span>():
+    <span class="var">score</span> += <span class="num">1</span>
+    <span class="fn">emit_signal</span>(<span class="str">"on_increment_score"</span>)
+
+<span class="kw">func</span> <span class="fn">game_over</span>():
+    <span class="var">is_start</span> = <span class="kw">false</span>
+    get_tree().<span class="var">paused</span> = <span class="kw">true</span>
+    <span class="fn">emit_signal</span>(<span class="str">"on_game_over"</span>)
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">2.3</div>
+        <div class="instruccion-text">
+          <strong>Registra el script como Autoload.</strong>
+          <p>Ve a <strong>Proyecto → Configuración del Proyecto → Autoload</strong>. Pulsa el icono de carpeta, selecciona <code>scripts/global.gd</code> y asegúrate de que el nombre es <code>Global</code>. Pulsa "Añadir".</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es una señal (signal)?</strong>
+        Una señal es como un botón de aviso. Cuando algo pasa (por ejemplo, el jugador puntúa),
+        Global emite la señal y cualquier nodo que esté "escuchando" reacciona.
+        Así los nodos no se llaman directamente entre sí y el código queda más limpio.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">03</div>
+      <div class="step-header-text">
+        <h3>Crea la escena del Pájaro</h3>
+        <p>El protagonista: físicas, salto, rotación y animación</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.1</div>
+        <div class="instruccion-text">
+          <strong>Crea una nueva escena y elige <code>CharacterBody2D</code> como nodo raíz.</strong>
+          <p>Escena → Nueva Escena → Selecciona "Otros Nodos" → busca <code>CharacterBody2D</code>. Este tipo de nodo tiene soporte nativo para físicas, colisiones y el método <code>move_and_slide()</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.2</div>
+        <div class="instruccion-text">
+          <strong>Renombra el nodo raíz a <code>Bird</code> y añade los nodos hijos:</strong>
+          <p>Selecciona el nodo raíz y añade (botón "+") estos hijos:</p>
+          <ul style="margin-top:8px;">
+            <li><code>AnimatedSprite2D</code> → para la animación de aleteo</li>
+            <li><code>CollisionShape2D</code> → para detectar colisiones (forma circular)</li>
+            <li><code>AudioStreamPlayer</code> → nombrar <code>AudioFly</code>, asignar <code>art/audio/wing.wav</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="node-name">Bird</span> <span class="node-type">[CharacterBody2D]</span> <span class="node-script">← bird.gd</span>
+├── <span class="node-name">AnimatedSprite2D</span> <span class="node-type">[AnimatedSprite2D]</span>
+├── <span class="node-name">CollisionShape2D</span> <span class="node-type">[CollisionShape2D]</span>
+└── <span class="node-name">AudioFly</span> <span class="node-type">[AudioStreamPlayer]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.3</div>
+        <div class="instruccion-text">
+          <strong>Configura la animación en AnimatedSprite2D.</strong>
+          <p>Selecciona el nodo → en el Inspector, en <strong>Sprite Frames</strong>, crea un nuevo recurso SpriteFrames. Añade una animación llamada <code>fly</code> con los 3 fotogramas del pájaro (redbird-downflap, midflap, upflap). Pon la velocidad a <code>10</code> fps y activa "Loop". Asigna la animación activa a <code>fly</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.4</div>
+        <div class="instruccion-text">
+          <strong>Configura la colisión.</strong>
+          <p>Selecciona <code>CollisionShape2D</code> → en el Inspector, crea una nueva <code>CircleShape2D</code>. Ajusta el radio hasta que rodee al sprite del pájaro.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.5</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>bird.gd</code> y asígnalo al nodo raíz Bird.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">CharacterBody2D</span>
+<span class="kw">class_name</span> <span class="cls">Bird</span>
+
+<span class="kw">const</span> <span class="var">JUMP_VELOCITY</span> = -<span class="num">300.0</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(<span class="var">delta</span>: <span class="cls">float</span>) -> <span class="kw">void</span>:
+    <span class="kw">if</span> <span class="cls">Global</span>.<span class="var">is_start</span>:
+        <span class="kw">if not</span> <span class="fn">is_on_floor</span>():
+            <span class="cmt"># Gravedad: cuanto más tiempo cae, más rápido va</span>
+            <span class="var">velocity</span> += <span class="fn">get_gravity</span>() * <span class="var">delta</span>
+        
+        <span class="kw">if</span> <span class="cls">Input</span>.<span class="fn">is_action_just_pressed</span>(<span class="str">"ui_accept"</span>):
+            <span class="var">velocity</span>.<span class="var">y</span> = <span class="var">JUMP_VELOCITY</span>
+            <span class="var">rotation</span> = <span class="fn">deg_to_rad</span>(-<span class="num">30</span>)
+            $<span class="cls">AudioFly</span>.<span class="fn">play</span>()
+    
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">rotation_bird</span>()
+
+<span class="kw">func</span> <span class="fn">rotation_bird</span>():
+    <span class="cmt"># Inclina el pájaro hacia abajo mientras cae</span>
+    <span class="kw">if</span> <span class="var">velocity</span>.<span class="var">y</span> > <span class="num">0</span> <span class="kw">and</span> <span class="fn">rad_to_deg</span>(<span class="var">rotation</span>) < <span class="num">90</span>:
+        <span class="var">rotation</span> += <span class="num">2</span> * <span class="fn">deg_to_rad</span>(<span class="num">1</span>)
+    <span class="kw">elif</span> <span class="var">velocity</span>.<span class="var">y</span> > <span class="num">0</span> <span class="kw">and</span> <span class="fn">rad_to_deg</span>(<span class="var">rotation</span>) > -<span class="num">30</span>:
+        <span class="var">rotation</span> -= <span class="num">2</span> * <span class="fn">deg_to_rad</span>(<span class="num">1</span>)
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.6</div>
+        <div class="instruccion-text">
+          <strong>Guarda la escena como <code>scenes/bird.tscn</code>.</strong>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué hace <code>_physics_process</code>?</strong>
+        Es una función especial que Godot llama automáticamente 60 veces por segundo,
+        sincronizada con el motor de físicas. Siempre usa el parámetro <code>delta</code>
+        para que el movimiento sea igual independientemente de la velocidad del ordenador.
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ class_name Bird es importante.</strong>
+        Al escribir <code>class_name Bird</code>, Godot registra este script con ese nombre
+        en todo el proyecto. Así otros scripts pueden hacer <code>if body is Bird</code>
+        para comprobar si el objeto que colisiona es el pájaro.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 4 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">04</div>
+      <div class="step-header-text">
+        <h3>Crea la escena de la Tubería (Pipe)</h3>
+        <p>Un obstáculo simple reutilizable como bloque de construcción</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <p style="color:var(--text-muted); margin-bottom:20px;">
+        Esta escena es un único trozo de tubería (sin script propio).
+        Después la usaremos dos veces dentro de <code>pipe_game.tscn</code>
+        para formar el par de tuberías (arriba + abajo).
+      </p>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>Area2D</code>.</strong>
+          <p>Renómbralo <code>Pipe</code>. Area2D detecta solapamientos pero no tiene físicas de cuerpo sólido; perfecto para detectar si el pájaro toca la tubería.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.2</div>
+        <div class="instruccion-text">
+          <strong>Añade un hijo <code>Sprite2D</code></strong> y asígnale la textura <code>art/sprites/pipe-green.png</code>.
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.3</div>
+        <div class="instruccion-text">
+          <strong>Añade un hijo <code>CollisionShape2D</code></strong> con forma <code>RectangleShape2D</code>.
+          Ajusta el rectángulo para que cubra el sprite de la tubería (aprox. 48×320 px).
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="node-name">Pipe</span> <span class="node-type">[Area2D]</span>
+├── <span class="node-name">Sprite2D</span> <span class="node-type">[Sprite2D]</span> <span class="node-script">← pipe-green.png</span>
+└── <span class="node-name">CollisionShape2D</span> <span class="node-type">[CollisionShape2D]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.4</div>
+        <div class="instruccion-text">
+          <strong>Guarda como <code>scenes/pipe.tscn</code>.</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 5 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">05</div>
+      <div class="step-header-text">
+        <h3>Crea la escena del Par de Tuberías (Pipe_game)</h3>
+        <p>Dos tuberías + zona de puntos + lógica de movimiento y colisión</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>Node2D</code>.</strong>
+          <p>Renómbralo <code>Pipe_game</code>. Node2D es el nodo base para cualquier objeto 2D sin físicas propias.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.2</div>
+        <div class="instruccion-text">
+          <strong>Instancia la escena pipe.tscn dos veces como hijos.</strong>
+          <p>Clic derecho en Pipe_game → "Instanciar escena hijo" → selecciona <code>pipe.tscn</code>. Repite. Renómbralos <code>PipeDown</code> (la de arriba, girada 180°) y <code>PipeTop</code> (la de abajo).</p>
+          <p style="margin-top:6px;">
+            Para <code>PipeDown</code>: Rotation = <code>180°</code> (3.1416 rad), posición Y = <code>-224</code>.<br>
+            Para <code>PipeTop</code>: posición Y = <code>224</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.3</div>
+        <div class="instruccion-text">
+          <strong>Añade un <code>VisibleOnScreenNotifier2D</code></strong> en posición X=120.
+          <p>Este nodo emite una señal cuando sale de la pantalla. Lo usaremos para borrar la tubería y ahorrar memoria.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.4</div>
+        <div class="instruccion-text">
+          <strong>Añade un <code>Area2D</code> hijo llamado <code>AreaAddPoint</code></strong>.
+          <p>Dentro, añade un <code>CollisionShape2D</code> con un rectángulo fino (20×144 px) en posición X=64, entre las dos tuberías. Esta área detectará cuando el pájaro pase por el hueco.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.5</div>
+        <div class="instruccion-text">
+          <strong>Añade dos <code>AudioStreamPlayer2D</code>:</strong>
+          <ul style="margin-top:6px;">
+            <li><code>AudioGameOver</code> → asignar hit.wav</li>
+            <li><code>AudioPoint</code> → asignar point.wav</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="node-name">Pipe_game</span> <span class="node-type">[Node2D]</span> <span class="node-script">← pipe_game.gd</span>
+├── <span class="node-name">AudioGameOver</span> <span class="node-type">[AudioStreamPlayer2D]</span>
+├── <span class="node-name">AudioPoint</span> <span class="node-type">[AudioStreamPlayer2D]</span>
+├── <span class="node-name">PipeDown</span> <span class="node-type">[instancia de pipe.tscn]</span> <span class="node-script">rot: 180°</span>
+├── <span class="node-name">PipeTop</span> <span class="node-type">[instancia de pipe.tscn]</span>
+├── <span class="node-name">VisibleOnScreenNotifier2D</span>
+└── <span class="node-name">AreaAddPoint</span> <span class="node-type">[Area2D]</span>
+    └── <span class="node-name">CollisionShape2D</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.6</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>pipe_game.gd</code> y asígnalo al nodo raíz.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">Node2D</span>
+
+<span class="kw">var</span> <span class="var">velocity</span> = <span class="num">200</span>  <span class="cmt"># velocidad de desplazamiento</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="kw">void</span>:
+    <span class="var">position</span>.<span class="var">x</span> = <span class="num">330</span>          <span class="cmt"># empieza fuera de la pantalla (derecha)</span>
+    <span class="var">position</span>.<span class="var">y</span> = <span class="fn">randi_range</span>(<span class="num">133</span>, <span class="num">300</span>)  <span class="cmt"># altura aleatoria</span>
+
+<span class="kw">func</span> <span class="fn">_process</span>(<span class="var">delta</span>: <span class="cls">float</span>) -> <span class="kw">void</span>:
+    <span class="var">position</span>.<span class="var">x</span> -= <span class="var">delta</span> * <span class="var">velocity</span>  <span class="cmt"># mueve a la izquierda</span>
+
+<span class="cmt"># Cuando la tubería sale de la pantalla</span>
+<span class="kw">func</span> <span class="fn">_on_visible_on_screen_exit</span>() -> <span class="kw">void</span>:
+    <span class="fn">queue_free</span>()  <span class="cmt"># destruye el nodo para liberar memoria</span>
+
+<span class="cmt"># Si el pájaro toca la tubería</span>
+<span class="kw">func</span> <span class="fn">_on_pipe_bird</span>(<span class="var">body</span>: <span class="cls">Node2D</span>) -> <span class="kw">void</span>:
+    <span class="kw">if</span> <span class="var">body</span> <span class="kw">is</span> <span class="cls">Bird</span>:
+        <span class="cls">Global</span>.<span class="fn">game_over</span>()
+        $<span class="cls">AudioGameOver</span>.<span class="fn">play</span>()
+
+<span class="cmt"># Si el pájaro pasa por el hueco</span>
+<span class="kw">func</span> <span class="fn">_on_area_add_point_body_entered</span>(<span class="var">body</span>: <span class="cls">Node2D</span>) -> <span class="kw">void</span>:
+    <span class="kw">if</span> <span class="var">body</span> <span class="kw">is</span> <span class="cls">Bird</span>:
+        <span class="cls">Global</span>.<span class="fn">increment_score</span>()
+        $<span class="cls">AudioPoint</span>.<span class="fn">play</span>()
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.7</div>
+        <div class="instruccion-text">
+          <strong>Conecta las señales.</strong>
+          <p>Selecciona <code>PipeDown</code> → pestaña "Nodo" (señales) → <code>body_entered</code> → conecta a <code>_on_pipe_bird</code> en Pipe_game.<br>
+          Repite para <code>PipeTop</code>.<br>
+          Selecciona <code>VisibleOnScreenNotifier2D</code> → señal <code>screen_exited</code> → conecta a <code>_on_visible_on_screen_exit</code>.<br>
+          Selecciona <code>AreaAddPoint</code> → señal <code>body_entered</code> → conecta a <code>_on_area_add_point_body_entered</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.8</div>
+        <div class="instruccion-text">
+          <strong>Guarda como <code>scenes/pipe_game.tscn</code>.</strong>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 queue_free() vs free()</strong>
+        <code>queue_free()</code> le pide a Godot que elimine el nodo de forma segura al
+        final del frame actual. Usar <code>free()</code> directamente puede causar errores
+        si el nodo todavía está procesando algo. Usa siempre <code>queue_free()</code>.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 6 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">06</div>
+      <div class="step-header-text">
+        <h3>Crea la interfaz gráfica (GUI)</h3>
+        <p>Puntuación, pantalla de inicio y Game Over</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>CanvasLayer</code>.</strong>
+          <p>Renómbralo <code>GUI</code>. CanvasLayer dibuja siempre por encima del juego y no se ve afectado por la cámara ni por el scroll del fondo.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.2</div>
+        <div class="instruccion-text">
+          <strong>Añade estos nodos hijos:</strong>
+          <ul style="margin-top:8px;">
+            <li><code>Label</code> → renómbralo <code>LabelScore</code>. Texto inicial: <code>0</code>. Fuente: <code>art/flappy-font.ttf</code>, tamaño 50. Posición centrada en la parte superior.</li>
+            <li><code>Sprite2D</code> → renómbralo <code>Message</code>. Textura: <code>art/sprites/message.png</code>. Posición central.</li>
+            <li><code>Sprite2D</code> → renómbralo <code>Gameover</code>. Textura: <code>art/sprites/gameover.png</code>. Posición central.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="node-name">GUI</span> <span class="node-type">[CanvasLayer]</span> <span class="node-script">← gui.gd</span>
+├── <span class="node-name">LabelScore</span> <span class="node-type">[Label]</span>
+├── <span class="node-name">Message</span> <span class="node-type">[Sprite2D]</span>
+└── <span class="node-name">Gameover</span> <span class="node-type">[Sprite2D]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.3</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>gui.gd</code> y asígnalo al nodo GUI.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">CanvasLayer</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="kw">void</span>:
+    <span class="cls">Global</span>.<span class="fn">connect</span>(<span class="str">"on_increment_score"</span>, <span class="fn">change_score</span>)
+    <span class="cls">Global</span>.<span class="fn">connect</span>(<span class="str">"on_game_over"</span>, <span class="fn">game_over</span>)
+    $<span class="cls">Gameover</span>.<span class="fn">hide</span>()
+    $<span class="cls">Message</span>.<span class="fn">show</span>()
+    get_tree().<span class="var">paused</span> = <span class="kw">false</span>
+
+<span class="cmt"># Detecta pulsaciones de teclado/ratón</span>
+<span class="kw">func</span> <span class="fn">_input</span>(<span class="var">event</span>: <span class="cls">InputEvent</span>) -> <span class="kw">void</span>:
+    <span class="kw">if</span> <span class="cls">Input</span>.<span class="fn">is_action_just_pressed</span>(<span class="str">"ui_accept"</span>):
+        <span class="kw">if</span> <span class="cls">Global</span>.<span class="var">is_start</span> == <span class="kw">false</span>:
+            <span class="cls">Global</span>.<span class="fn">game_start</span>()
+            <span class="fn">game_start</span>()
+
+<span class="kw">func</span> <span class="fn">game_start</span>():
+    $<span class="cls">Message</span>.<span class="fn">hide</span>()
+
+<span class="kw">func</span> <span class="fn">game_over</span>():
+    $<span class="cls">Gameover</span>.<span class="fn">show</span>()
+    <span class="cmt"># Espera 2 segundos antes de reiniciar</span>
+    <span class="kw">await</span> get_tree().<span class="fn">create_timer</span>(<span class="num">2</span>).<span class="var">timeout</span>
+    get_tree().<span class="fn">reload_current_scene</span>()
+
+<span class="kw">func</span> <span class="fn">change_score</span>():
+    $<span class="cls">LabelScore</span>.<span class="var">text</span> = <span class="fn">str</span>(<span class="cls">Global</span>.<span class="var">score</span>)
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.4</div>
+        <div class="instruccion-text">
+          <strong>Guarda como <code>scenes/gui.tscn</code>.</strong>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué hace <code>await</code>?</strong>
+        <code>await</code> pausa la ejecución de la función hasta que ocurra el evento indicado.
+        En este caso espera 2 segundos (<code>create_timer(2).timeout</code>) sin bloquear
+        el resto del juego. Es la forma moderna de hacer un "espera X segundos y luego..." en Godot 4.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 7 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">07</div>
+      <div class="step-header-text">
+        <h3>Monta la escena principal (Level)</h3>
+        <p>El punto de entrada del juego: fondo, pájaro, suelo y generador de tuberías</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>Node</code>.</strong>
+          <p>Renómbralo <code>Level</code>. Un <code>Node</code> básico es suficiente para el nodo raíz ya que no necesita propiedades 2D directas.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.2</div>
+        <div class="instruccion-text">
+          <strong>Añade el fondo con scroll automático.</strong>
+          <p>Añade un nodo <code>Parallax2D</code> y renómbralo <code>ParallaxBackground</code>. En el Inspector: <code>repeat_size = Vector2(288, 0)</code> y <code>autoscroll = Vector2(-30, 0)</code>. Dentro, añade un <code>Sprite2D</code> con la textura <code>background-day.png</code> en posición (144, 256).</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.3</div>
+        <div class="instruccion-text">
+          <strong>Instancia la GUI dentro de ParallaxBackground.</strong>
+          <p>Clic derecho en ParallaxBackground → "Instanciar escena hijo" → selecciona <code>gui.tscn</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.4</div>
+        <div class="instruccion-text">
+          <strong>Añade el suelo animado.</strong>
+          <p>Añade otro <code>Parallax2D</code> hijo del nodo Level (no de ParallaxBackground), llámalo <code>ParallaxFloor</code>. <code>repeat_size = Vector2(336, 0)</code>, <code>autoscroll = Vector2(-60, 0)</code>. Dentro, un <code>Sprite2D</code> con <code>base.png</code> en posición (288, 464), escala X = 1.71.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.5</div>
+        <div class="instruccion-text">
+          <strong>Instancia el pájaro.</strong>
+          <p>Clic derecho en Level → "Instanciar escena hijo" → selecciona <code>bird.tscn</code>. Ponlo en posición (120, 112) y <code>z_index = 1</code> (para que se dibuje por encima del fondo).</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.6</div>
+        <div class="instruccion-text">
+          <strong>Añade el Timer para generar tuberías.</strong>
+          <p>Añade un nodo <code>Timer</code> hijo de Level, llámalo <code>TimerPipe</code>. En el Inspector, <code>wait_time = 1.5</code> segundos.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.7</div>
+        <div class="instruccion-text">
+          <strong>Añade la zona de detección del suelo.</strong>
+          <p>Añade un nodo <code>Area2D</code> → <code>AreaFloor</code>. Dentro, un <code>CollisionShape2D</code> con un rectángulo (572×64) centrado en posición (290, 440), justo sobre el suelo visible.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.8</div>
+        <div class="instruccion-text">
+          <strong>Añade el sonido de Game Over.</strong>
+          <p>Añade un <code>AudioStreamPlayer2D</code> → <code>AudioGameOver</code> → asigna <code>hit.wav</code>.</p>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="node-name">Level</span> <span class="node-type">[Node]</span> <span class="node-script">← level.gd</span>
+├── <span class="node-name">AudioGameOver</span> <span class="node-type">[AudioStreamPlayer2D]</span>
+├── <span class="node-name">ParallaxBackground</span> <span class="node-type">[Parallax2D]</span>
+│   ├── <span class="node-name">BackgroundDay</span> <span class="node-type">[Sprite2D]</span>
+│   └── <span class="node-name">GUI</span> <span class="node-type">[instancia gui.tscn]</span>
+├── <span class="node-name">ParallaxFloor</span> <span class="node-type">[Parallax2D]</span>
+│   └── <span class="node-name">Base</span> <span class="node-type">[Sprite2D]</span>
+├── <span class="node-name">Bird</span> <span class="node-type">[instancia bird.tscn]</span>
+├── <span class="node-name">TimerPipe</span> <span class="node-type">[Timer]</span>
+└── <span class="node-name">AreaFloor</span> <span class="node-type">[Area2D]</span>
+    └── <span class="node-name">CollisionShape2D</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.9</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>level.gd</code> y asígnalo al nodo Level.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">Node</span>
+
+<span class="cmt"># Variable exportada: asignable desde el editor</span>
+@<span class="fn">export</span> <span class="kw">var</span> <span class="var">pipe_game_scene</span>: <span class="cls">PackedScene</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="kw">void</span>:
+    <span class="cls">Global</span>.<span class="fn">connect</span>(<span class="str">"on_game_start"</span>, <span class="fn">game_start</span>)
+
+<span class="kw">func</span> <span class="fn">game_start</span>():
+    $<span class="cls">TimerPipe</span>.<span class="fn">start</span>()
+
+<span class="kw">func</span> <span class="fn">create_pipe</span>():
+    <span class="kw">var</span> <span class="var">pipe_game</span> = <span class="var">pipe_game_scene</span>.<span class="fn">instantiate</span>()
+    <span class="fn">add_child</span>(<span class="var">pipe_game</span>)
+
+<span class="cmt"># El Timer genera una tubería cada 1.5 segundos</span>
+<span class="kw">func</span> <span class="fn">_on_timer_pipe_timeout</span>() -> <span class="kw">void</span>:
+    <span class="fn">create_pipe</span>()
+
+<span class="cmt"># Si el pájaro toca el suelo</span>
+<span class="kw">func</span> <span class="fn">_on_area_floor_body_entered</span>(<span class="var">body</span>: <span class="cls">Node2D</span>) -> <span class="kw">void</span>:
+    <span class="kw">if</span> <span class="var">body</span> <span class="kw">is</span> <span class="cls">Bird</span>:
+        <span class="cls">Global</span>.<span class="fn">game_over</span>()
+        $<span class="cls">TimerPipe</span>.<span class="fn">stop</span>()
+        $<span class="cls">AudioGameOver</span>.<span class="fn">play</span>()
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.10</div>
+        <div class="instruccion-text">
+          <strong>Asigna la escena de la tubería a la variable exportada.</strong>
+          <p>Selecciona el nodo Level en el árbol → en el Inspector verás <strong>Pipe Game Scene</strong> → arrastra <code>pipe_game.tscn</code> desde el FileSystem hasta esa ranura.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.11</div>
+        <div class="instruccion-text">
+          <strong>Conecta las señales del Timer y del AreaFloor.</strong>
+          <p>Selecciona <code>TimerPipe</code> → señal <code>timeout</code> → conecta a <code>_on_timer_pipe_timeout</code> en Level.<br>
+          Selecciona <code>AreaFloor</code> → señal <code>body_entered</code> → conecta a <code>_on_area_floor_body_entered</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.12</div>
+        <div class="instruccion-text">
+          <strong>Guarda como <code>scenes/level.tscn</code> y márcala como escena principal.</strong>
+          <p>Ve a <strong>Proyecto → Configuración del Proyecto → Application → Run → Main Scene</strong> y selecciona <code>scenes/level.tscn</code>.</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es @export?</strong>
+        El decorador <code>@export</code> hace que una variable aparezca en el Inspector del editor.
+        Así puedes cambiar valores o asignar recursos sin tocar el código.
+        Es muy útil para hacer el juego más configurable.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 8 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">08</div>
+      <div class="step-header-text">
+        <h3>¡Prueba y ajusta el juego!</h3>
+        <p>Corre el proyecto y comprueba que todo funciona correctamente</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">8.1</div>
+        <div class="instruccion-text">
+          <strong>Pulsa F5 (o el botón ▶) para ejecutar el proyecto.</strong>
+          <p>Deberías ver el pájaro quieto con el mensaje de inicio. Al pulsar Espacio, el juego comienza.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">8.2</div>
+        <div class="instruccion-text">
+          <strong>Comprueba la lista de verificación:</strong>
+          <ul style="margin-top:8px;">
+            <li>✅ El fondo y el suelo se mueven solos</li>
+            <li>✅ Al pulsar Espacio el pájaro salta</li>
+            <li>✅ El pájaro cae por gravedad</li>
+            <li>✅ Salen tuberías cada 1.5 segundos a distintas alturas</li>
+            <li>✅ Al pasar por el hueco sube la puntuación</li>
+            <li>✅ Al tocar una tubería o el suelo → Game Over</li>
+            <li>✅ Tras 2 segundos el juego se reinicia</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Problema común: el pájaro cae antes de pulsar Espacio.</strong>
+        Revisa que en <code>bird.gd</code> la gravedad esté dentro del bloque
+        <code>if Global.is_start:</code>. Si no, el pájaro caerá incluso en la pantalla de inicio.
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Las tuberías no aparecen.</strong>
+        Comprueba que en el Inspector del nodo Level la variable <strong>Pipe Game Scene</strong>
+        tiene asignada la escena <code>pipe_game.tscn</code>. Si está vacía, arrástrala desde el FileSystem.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="section-title">Resumen de Conceptos Trabajados</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Concepto</th>
+        <th>Dónde lo usamos</th>
+        <th>Para qué sirve</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CharacterBody2D</strong></td>
+        <td>bird.tscn</td>
+        <td>Nodo con físicas para el protagonista; incluye <code>velocity</code> y <code>move_and_slide()</code></td>
+      </tr>
+      <tr>
+        <td><strong>Area2D</strong></td>
+        <td>pipe.tscn, AreaFloor, AreaAddPoint</td>
+        <td>Detecta solapamientos sin tener cuerpo físico sólido</td>
+      </tr>
+      <tr>
+        <td><strong>Signals (señales)</strong></td>
+        <td>global.gd, todas las escenas</td>
+        <td>Comunicar nodos sin que se conozcan directamente entre sí</td>
+      </tr>
+      <tr>
+        <td><strong>Autoload</strong></td>
+        <td>global.gd</td>
+        <td>Nodo siempre activo y accesible desde cualquier script</td>
+      </tr>
+      <tr>
+        <td><strong>PackedScene / instantiate()</strong></td>
+        <td>level.gd → create_pipe()</td>
+        <td>Crear copias de una escena en tiempo de ejecución</td>
+      </tr>
+      <tr>
+        <td><strong>Timer</strong></td>
+        <td>Level → TimerPipe</td>
+        <td>Ejecutar código periódicamente sin bloquear el hilo principal</td>
+      </tr>
+      <tr>
+        <td><strong>Parallax2D</strong></td>
+        <td>Fondo y suelo</td>
+        <td>Scroll automático de texturas para el efecto de movimiento</td>
+      </tr>
+      <tr>
+        <td><strong>CanvasLayer</strong></td>
+        <td>gui.tscn</td>
+        <td>Dibuja la interfaz siempre por encima del juego</td>
+      </tr>
+      <tr>
+        <td><strong>queue_free()</strong></td>
+        <td>pipe_game.gd</td>
+        <td>Eliminar nodos de forma segura para no consumir memoria</td>
+      </tr>
+      <tr>
+        <td><strong>await</strong></td>
+        <td>gui.gd</td>
+        <td>Pausar una función sin bloquear el resto del juego</td>
+      </tr>
+      <tr>
+        <td><strong>@export</strong></td>
+        <td>level.gd</td>
+        <td>Exponer variables al Inspector del editor</td>
+      </tr>
+      <tr>
+        <td><strong>class_name</strong></td>
+        <td>bird.gd</td>
+        <td>Registrar el tipo de script para poder usarlo con <code>is</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ACTIVIDADES EXTRA -->
+  <div class="section-title">Actividades de Ampliación</div>
+
+  <p style="color:var(--text-muted); margin-bottom:20px;">
+    ¿Has terminado? Aquí tienes retos para ampliar el juego y seguir practicando:
+  </p>
+
+  <div class="extra-grid">
+    <div class="extra-card">
+      <div class="dificultad dif-1">★☆☆ FÁCIL</div>
+      <h4>Cambia el color del pájaro</h4>
+      <p>Sustituye las texturas redbird por yellowbird o bluebird. Experimenta con las variables del AnimatedSprite2D.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dificultad dif-1">★☆☆ FÁCIL</div>
+      <h4>Fondo de noche</h4>
+      <p>Usa <code>background-night.png</code> en lugar del de día. ¿Puedes hacer que cambie aleatoriamente al inicio de cada partida?</p>
+    </div>
+    <div class="extra-card">
+      <div class="dificultad dif-2">★★☆ MEDIO</div>
+      <h4>Dificultad progresiva</h4>
+      <p>Cada 5 puntos, aumenta la velocidad de las tuberías (<code>velocity</code> en pipe_game.gd) y reduce el tiempo del Timer.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dificultad dif-2">★★☆ MEDIO</div>
+      <h4>Marcador de récord</h4>
+      <p>Guarda el récord usando <code>FileAccess</code> de Godot. Muéstralo en la pantalla de Game Over.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dificultad dif-3">★★★ DIFÍCIL</div>
+      <h4>Animación de muerte</h4>
+      <p>Cuando el pájaro muere, anímalo cayendo al suelo (desactiva el salto, deja que la gravedad lo lleve) antes de mostrar el Game Over.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dificultad dif-3">★★★ DIFÍCIL</div>
+      <h4>Selector de personaje</h4>
+      <p>Añade una pantalla de inicio donde el jugador elija entre los tres pájaros disponibles. Pasa la elección a la escena del nivel.</p>
+    </div>
+  </div>
+
+  <hr>
+
+  <p style="color:var(--text-muted); font-size:14px; text-align:center;">
+    Actividad generada mediante ingeniería inversa del proyecto <strong>flappy_bird-main</strong> · Godot 4.6 · FP
+  </p>
+
+</div>
+</body>
+</html>
