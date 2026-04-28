@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad: Rompe Ladrillos en Godot 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --accent: #58c4dc;
+    --accent2: #f0c040;
+    --accent3: #ff6b6b;
+    --accent4: #7ee787;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --border: #30363d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    padding-bottom: 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(160deg, #0d1117 0%, #111827 60%, #0d1117 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 56px 40px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(88,196,220,0.07) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-size: clamp(28px, 5vw, 54px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+  header h1 span { color: var(--accent); }
+  .header-desc {
+    color: var(--text-muted);
+    max-width: 600px;
+    font-size: 15px;
+  }
+  .header-meta {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .meta-pill strong { color: var(--accent); }
+
+  /* ── CONTAINER ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 56px 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* ── INTRO CARD ── */
+  .intro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-top: 40px;
+  }
+  .intro-card h2 { font-size: 17px; font-weight: 600; color: var(--accent); margin-bottom: 10px; }
+  .intro-card p { color: var(--text-muted); }
+
+  /* ── STRUCTURE GRID ── */
+  .structure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .structure-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .structure-item .folder-icon { font-size: 20px; margin-bottom: 8px; }
+  .structure-item h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-bottom: 6px;
+  }
+  .structure-item ul { list-style: none; font-size: 13px; color: var(--text-muted); }
+  .structure-item ul li::before { content: '→ '; color: var(--border); }
+
+  /* ── STEPS ── */
+  .step {
+    background: #0a0e14;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 26px 30px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .step-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--accent);
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-header-text h3 { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  .step-header-text p { font-size: 14px; color: var(--text-muted); }
+  .step-body { padding: 26px 30px; }
+
+  /* ── INSTRUCCIONES ── */
+  .instruccion {
+    display: flex; gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .instruccion-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 28px;
+    padding-top: 2px;
+  }
+  .instruccion-text { flex: 1; }
+  .instruccion-text strong { color: var(--text); }
+  .instruccion-text p { color: var(--text-muted); font-size: 15px; }
+
+  /* ── TIPS / WARNINGS ── */
+  .tip {
+    background: rgba(88,196,220,0.05);
+    border: 1px solid rgba(88,196,220,0.2);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin: 18px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .tip strong { color: var(--accent); }
+
+  .warning {
+    background: rgba(255,107,107,0.06);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin: 18px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .warning strong { color: var(--accent3); }
+
+  .note {
+    background: rgba(240,192,64,0.05);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin: 18px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .note strong { color: var(--accent2); }
+
+  /* ── CODE BLOCKS ── */
+  pre {
+    background: #060810;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 14px 0;
+    position: relative;
+  }
+  pre .lang-label {
+    position: absolute; top: 10px; right: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--accent); letter-spacing: 1px;
+  }
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; line-height: 1.9;
+    color: #cdd9e5;
+  }
+  .kw { color: #f47067; }
+  .fn { color: #dcbdfb; }
+  .str { color: #96d0ff; }
+  .cmt { color: #545d68; font-style: italic; }
+  .num { color: var(--accent2); }
+  .var { color: #aff5b4; }
+  .cls { color: #ffa657; }
+  .dec { color: var(--accent); }
+
+  /* ── NODE TREE ── */
+  .node-tree {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    background: #060810;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 24px;
+    margin: 14px 0;
+    line-height: 2.1;
+    color: #cdd9e5;
+  }
+  .node-tree .nn { color: var(--accent4); }
+  .node-tree .nt { color: var(--text-muted); font-size: 11px; }
+  .node-tree .ns { color: var(--accent2); font-size: 11px; }
+
+  /* ── TABLA ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--surface2);
+    padding: 11px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  td strong { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── EXTRA ── */
+  .extra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .extra-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .extra-card .dif { font-size: 11px; font-family: 'Space Mono', monospace; letter-spacing: 1px; margin-bottom: 8px; }
+  .dif-1 { color: var(--accent4); }
+  .dif-2 { color: var(--accent2); }
+  .dif-3 { color: var(--accent3); }
+  .extra-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .extra-card p { font-size: 13px; color: var(--text-muted); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 20px; color: var(--text-muted); }
+  li { margin-bottom: 6px; }
+
+  /* inline code */
+  p code, li code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-tag">Actividad Práctica · Godot 4 · FP · PMDM</div>
+    <h1>Construye tu propio<br><span>Rompe Ladrillos</span> en Godot 4</h1>
+    <p class="header-desc">
+      Recrea paso a paso el clásico Breakout: pala, bola con rebotes físicos, ladrillos con animación de destrucción, puntuación y gestión de partida.
+    </p>
+    <div class="header-meta">
+      <span class="meta-pill">Motor: <strong>Godot 4.x</strong></span>
+      <span class="meta-pill">Nivel: <strong>Principiante</strong></span>
+      <span class="meta-pill">Duración aprox.: <strong>3–4 horas</strong></span>
+      <span class="meta-pill">Resolución: <strong>1280×720</strong></span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro-card">
+    <h2>¿Qué vas a aprender?</h2>
+    <p>
+      Trabajarás con <strong>CharacterBody2D</strong> y <strong>StaticBody2D</strong>, rebotes físicos con <code>move_and_collide()</code>,
+      grupos de nodos, animaciones con <strong>Tween</strong>, dibujo 2D personalizado con <code>_draw()</code>,
+      <strong>Marker2D</strong> para posicionado inicial, <strong>Autoload</strong> para la puntuación y gestión del ciclo de partida.
+    </p>
+  </div>
+
+  <!-- ESTRUCTURA -->
+  <div class="section-title">Estructura del Proyecto</div>
+
+  <div class="structure-grid">
+    <div class="structure-item">
+      <div class="folder-icon">🎬</div>
+      <h4>scenes/</h4>
+      <ul>
+        <li>main.tscn</li>
+        <li>ball.tscn</li>
+        <li>brick.tscn</li>
+        <li>padle_player.tscn</li>
+        <li>circule.tscn</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">📜</div>
+      <h4>scripts/</h4>
+      <ul>
+        <li>global.gd (Autoload)</li>
+        <li>main.gd</li>
+        <li>ball.gd</li>
+        <li>brick.gd</li>
+        <li>padle_player.gd</li>
+        <li>circule.gd</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">🎨</div>
+      <h4>art/</h4>
+      <ul>
+        <li>icon.svg</li>
+      </ul>
+    </div>
+    <div class="structure-item">
+      <div class="folder-icon">⚙️</div>
+      <h4>Raíz</h4>
+      <ul>
+        <li>project.godot</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>💡 Nota sobre los assets:</strong>
+    Este proyecto no usa imágenes externas. Todos los elementos visuales (bola, pala, ladrillos)
+    se dibujan con nodos <code>ColorRect</code> y con código personalizado. Ideal para centrarse
+    en la lógica sin depender de recursos gráficos.
+  </div>
+
+  <!-- PASOS -->
+  <div class="section-title">Pasos de la Actividad</div>
+
+  <!-- PASO 1 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">01</div>
+      <div class="step-header-text">
+        <h3>Crea y configura el proyecto</h3>
+        <p>Ajustes de ventana, FPS y controles de teclado</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.1</div>
+        <div class="instruccion-text">
+          <strong>Crea un nuevo proyecto en Godot 4.</strong>
+          <p>Llámalo <code>rompe-ladrillos</code>. Renderer: <strong>Compatibility</strong>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.2</div>
+        <div class="instruccion-text">
+          <strong>Configura el tamaño de ventana.</strong>
+          <p><strong>Proyecto → Configuración → Display → Window</strong>: anchura <code>1280</code>, altura <code>720</code>. En Stretch → Mode: <code>canvas_items</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.3</div>
+        <div class="instruccion-text">
+          <strong>Limita los FPS a 60.</strong>
+          <p><strong>Application → Run → max_fps</strong> = <code>60</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">1.4</div>
+        <div class="instruccion-text">
+          <strong>Configura los controles de teclado.</strong>
+          <p>Ve a <strong>Proyecto → Configuración → Input Map</strong>. Los actions <code>ui_left</code> y <code>ui_right</code> ya existen por defecto (flechas). Añade también la tecla <strong>A</strong> a <code>ui_left</code> y la tecla <strong>D</strong> a <code>ui_right</code> para poder mover la pala con ambas opciones.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">02</div>
+      <div class="step-header-text">
+        <h3>Crea el script Global (Autoload)</h3>
+        <p>Gestión centralizada de la puntuación</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">2.1</div>
+        <div class="instruccion-text">
+          <strong>Crea la carpeta <code>scripts/</code> y dentro el archivo <code>global.gd</code>.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="cmt"># global.gd — Autoload: puntuación accesible desde todo el juego</span>
+<span class="kw">extends</span> <span class="cls">Node</span>
+
+<span class="kw">var</span> <span class="var">score</span> := <span class="num">0</span>
+
+<span class="kw">func</span> <span class="fn">increment_score</span>():
+    <span class="var">score</span> += <span class="num">1</span>
+
+<span class="kw">func</span> <span class="fn">reset_score</span>():
+    <span class="var">score</span> = <span class="num">0</span>
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">2.2</div>
+        <div class="instruccion-text">
+          <strong>Registra el script como Autoload.</strong>
+          <p><strong>Proyecto → Configuración → Autoload</strong>. Selecciona <code>scripts/global.gd</code>, nombre: <code>Global</code>. Pulsa Añadir.</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 Diferencia con el proyecto Flappy Bird:</strong>
+        En este juego el Global es más sencillo: solo lleva la puntuación. No necesitamos señales
+        porque la actualización del marcador se hace directamente en el <code>_process</code> de main,
+        leyendo <code>Global.score</code> en cada frame.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">03</div>
+      <div class="step-header-text">
+        <h3>Crea la escena del círculo decorativo (Circule)</h3>
+        <p>Dibujo 2D personalizado con código — la bola visible</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <p style="color:var(--text-muted); margin-bottom:18px;">
+        En lugar de usar un sprite o una imagen, vamos a dibujar la bola directamente con código
+        usando el método <code>_draw()</code> de Godot. Esta escena se instanciará dentro de la bola.
+      </p>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>Node2D</code>.</strong>
+          <p>Renómbralo <code>Circule</code>. Guarda como <code>scenes/circule.tscn</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">3.2</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>circule.gd</code> y asígnalo.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="dec">@tool</span>          <span class="cmt"># permite ver el resultado en el editor sin ejecutar el juego</span>
+<span class="kw">extends</span> <span class="cls">Node2D</span>
+
+<span class="kw">var</span> <span class="var">circle_position</span> = <span class="cls">Vector2</span>.ZERO
+<span class="kw">var</span> <span class="var">circle_radius</span> = <span class="num">8</span>
+<span class="kw">var</span> <span class="var">circle_color</span> := <span class="cls">Color</span>(<span class="str">"#fff"</span>)
+
+<span class="kw">func</span> <span class="fn">_draw</span>() -> <span class="kw">void</span>:
+    <span class="cmt"># draw_circle(centro, radio, color)</span>
+    <span class="fn">draw_circle</span>(<span class="var">circle_position</span>, <span class="var">circle_radius</span>, <span class="var">circle_color</span>)
+</code></pre>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es <code>@tool</code>?</strong>
+        El decorador <code>@tool</code> hace que el script se ejecute también dentro del editor de Godot
+        (no solo al jugar). Así puedes ver el círculo dibujado en la escena mientras diseñas,
+        sin tener que pulsar Play. Muy útil para herramientas visuales y depuración.
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es <code>_draw()</code>?</strong>
+        Es una función especial que Godot llama cuando necesita redibujar el nodo.
+        Dentro puedes usar métodos como <code>draw_circle()</code>, <code>draw_rect()</code>,
+        <code>draw_line()</code>, etc. para crear gráficos completamente por código,
+        sin imágenes externas.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 4 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">04</div>
+      <div class="step-header-text">
+        <h3>Crea la escena de la Bola (Ball)</h3>
+        <p>Movimiento, rebote físico y detección de ladrillos</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>CharacterBody2D</code>.</strong>
+          <p>Renómbralo <code>Ball</code>. En el Inspector, pon <strong>Motion Mode</strong> en <code>Floating</code> (la bola se mueve en todas las direcciones, no solo vertical como un personaje). Guarda como <code>scenes/ball.tscn</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.2</div>
+        <div class="instruccion-text">
+          <strong>Añade los nodos hijos:</strong>
+          <ul style="margin-top:8px;">
+            <li><code>CollisionShape2D</code> → forma <code>CircleShape2D</code>, radio <code>8</code>, escala <code>1.2</code></li>
+            <li>Instancia de <code>circule.tscn</code> → la representación visual de la bola</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="nn">Ball</span> <span class="nt">[CharacterBody2D · Motion: Floating]</span> <span class="ns">← ball.gd</span>
+├── <span class="nn">CollisionShape2D</span> <span class="nt">[CircleShape2D r=8]</span>
+└── <span class="nn">Circule</span> <span class="nt">[instancia circule.tscn]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">4.3</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>ball.gd</code> y asígnalo.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">CharacterBody2D</span>
+
+<span class="kw">const</span> <span class="var">SPEED</span> = <span class="num">300.0</span>
+
+<span class="cmt"># Función pública: la llama main.gd al iniciar partida</span>
+<span class="kw">func</span> <span class="fn">start</span>() -> <span class="kw">void</span>:
+    <span class="cmt"># La bola sale hacia abajo (Vector2(0,1) = dirección abajo)</span>
+    <span class="var">velocity</span> = <span class="cls">Vector2</span>(<span class="num">0</span>, <span class="num">1</span>) * <span class="var">SPEED</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(<span class="var">delta</span>: <span class="cls">float</span>) -> <span class="kw">void</span>:
+    <span class="cmt"># move_and_collide mueve la bola y devuelve info de la colisión</span>
+    <span class="kw">var</span> <span class="var">collision</span> = <span class="fn">move_and_collide</span>(<span class="var">velocity</span> * <span class="var">delta</span>)
+    
+    <span class="kw">if</span> <span class="var">collision</span>:
+        <span class="cmt"># ¿Con qué ha colisionado?</span>
+        <span class="kw">var</span> <span class="var">ref</span> = <span class="var">collision</span>.<span class="fn">get_collider</span>() <span class="kw">as</span> <span class="cls">StaticBody2D</span>
+        
+        <span class="kw">if</span> <span class="var">ref</span> <span class="kw">and</span> <span class="var">ref</span>.<span class="fn">is_in_group</span>(<span class="str">"brick_group"</span>):
+            <span class="cmt"># Es un ladrillo: lo destruimos y sumamos punto</span>
+            <span class="var">ref</span>.<span class="fn">destroy_brick</span>()
+            <span class="cls">Global</span>.<span class="fn">increment_score</span>()
+        
+        <span class="cmt"># Rebote: invierte la dirección usando la normal de la superficie</span>
+        <span class="var">velocity</span> = <span class="var">velocity</span>.<span class="fn">bounce</span>(<span class="var">collision</span>.<span class="fn">get_normal</span>())
+</code></pre>
+
+      <div class="tip">
+        <strong>💡 <code>move_and_collide()</code> vs <code>move_and_slide()</code></strong><br>
+        <code>move_and_slide()</code> (usado en Flappy Bird y en la pala) desliza automáticamente
+        el objeto por las superficies — ideal para personajes que caminan.<br>
+        <code>move_and_collide()</code> devuelve información detallada de la colisión (normal, punto de contacto)
+        y <em>no</em> desliza. Perfecto para una bola que necesita calcular el ángulo de rebote.
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es <code>velocity.bounce(normal)</code>?</strong>
+        <code>bounce()</code> calcula el vector reflejado usando la normal de la superficie de impacto.
+        Es el equivalente matemático de un espejo: la bola rebota con el ángulo de incidencia igual
+        al de reflexión. No tienes que calcular ángulos manualmente.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 5 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">05</div>
+      <div class="step-header-text">
+        <h3>Crea la escena del Ladrillo (Brick)</h3>
+        <p>Obstáculo estático con animación de destrucción mediante Tween</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>StaticBody2D</code>.</strong>
+          <p>Renómbralo <code>Brick</code>. <code>StaticBody2D</code> es un cuerpo físico que no se mueve — perfecto para paredes, suelos y obstáculos.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.2</div>
+        <div class="instruccion-text">
+          <strong>Añade los nodos hijos:</strong>
+          <ul style="margin-top:8px;">
+            <li><code>ColorRect</code> → tamaño <code>80×16</code>, posición <code>(-40, 8)</code>, color amarillo: <code>#ffff30</code></li>
+            <li><code>CollisionShape2D</code> → forma <code>RectangleShape2D</code>, tamaño <code>80×16</code>, posición <code>(0, 16)</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.3</div>
+        <div class="instruccion-text">
+          <strong>⚠️ Asigna el grupo <code>brick_group</code> al nodo Brick.</strong>
+          <p>Con el nodo Brick seleccionado, ve a la pestaña <strong>Nodo → Grupos</strong> y añade el grupo <code>brick_group</code>. Esto es fundamental: la bola detecta ladrillos usando <code>is_in_group("brick_group")</code>.</p>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="nn">Brick</span> <span class="nt">[StaticBody2D · grupo: brick_group]</span> <span class="ns">← brick.gd</span>
+├── <span class="nn">ColorRect</span> <span class="nt">[80×16 · color amarillo]</span>
+└── <span class="nn">CollisionShape2D</span> <span class="nt">[RectangleShape2D 80×16]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.4</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>brick.gd</code> y asígnalo.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">StaticBody2D</span>
+
+<span class="kw">func</span> <span class="fn">destroy_brick</span>() -> <span class="kw">void</span>:
+    <span class="cmt"># 1. Desactiva la colisión inmediatamente (con set_deferred para evitar errores)</span>
+    $<span class="cls">CollisionShape2D</span>.<span class="fn">set_deferred</span>(<span class="str">"disabled"</span>, <span class="kw">true</span>)
+    
+    <span class="cmt"># 2. Crea un Tween para animar el desvanecimiento</span>
+    <span class="kw">var</span> <span class="var">tween</span>: <span class="cls">Tween</span> = get_tree().<span class="fn">create_tween</span>()
+    
+    <span class="cmt"># 3. Anima la propiedad "modulate:a" (transparencia alfa) de 1 a 0 en 0.5 segundos</span>
+    <span class="var">tween</span>.<span class="fn">tween_property</span>(<span class="kw">self</span>, <span class="str">"modulate:a"</span>, <span class="num">0.0</span>, <span class="num">0.5</span>)
+    
+    <span class="cmt"># 4. Cuando termina la animación, ejecuta finish_animation()</span>
+    <span class="var">tween</span>.<span class="fn">tween_callback</span>(<span class="fn">finish_animation</span>)
+
+<span class="kw">func</span> <span class="fn">finish_animation</span>():
+    <span class="fn">queue_free</span>()   <span class="cmt"># elimina el nodo de la escena</span>
+</code></pre>
+
+      <div class="tip">
+        <strong>💡 ¿Qué es un Tween?</strong>
+        Un <code>Tween</code> es un animador de propiedades. Le dices "lleva esta propiedad
+        de valor A a valor B en X segundos" y Godot lo hace suavemente.
+        <code>modulate:a</code> controla la transparencia (0 = invisible, 1 = opaco).
+        Es la forma sencilla de hacer fade-out sin necesidad de <code>AnimationPlayer</code>.
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ set_deferred() es obligatorio aquí.</strong>
+        No puedes desactivar una colisión mientras Godot está procesando una colisión
+        (produciría un error). <code>set_deferred()</code> pospone el cambio al final del frame,
+        cuando ya es seguro hacerlo. Recuérdalo siempre que modifiques colisiones dentro de
+        callbacks de física.
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">5.5</div>
+        <div class="instruccion-text">
+          <strong>Guarda como <code>scenes/brick.tscn</code>.</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 6 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">06</div>
+      <div class="step-header-text">
+        <h3>Crea la escena de la Pala (PadlePlayer)</h3>
+        <p>Control de movimiento horizontal con suavizado</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>CharacterBody2D</code>.</strong>
+          <p>Renómbralo <code>PadlePlayer</code>. Motion Mode: <code>Floating</code> (la pala solo se mueve en horizontal). Guarda como <code>scenes/padle_player.tscn</code>.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.2</div>
+        <div class="instruccion-text">
+          <strong>Añade los nodos hijos:</strong>
+          <ul style="margin-top:8px;">
+            <li><code>ColorRect</code> → tamaño <code>128×32</code>, posición <code>(-64, -16)</code>, color cyan: <code>#3bffff</code></li>
+            <li><code>CollisionPolygon2D</code> → crea un polígono levemente redondeado en los extremos. Puntos: <code>(-64,16), (-64,-8), (-8,-16), (8,-16), (64,-8), (64,16)</code></li>
+          </ul>
+          <p style="margin-top:6px;">La forma de trapecio en la colisión hace que la bola rebote con ángulos diferentes según dónde impacte: más oblicuo en los extremos.</p>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="nn">PadlePlayer</span> <span class="nt">[CharacterBody2D · Motion: Floating]</span> <span class="ns">← padle_player.gd</span>
+├── <span class="nn">ColorRect</span> <span class="nt">[128×32 · color cyan]</span>
+└── <span class="nn">CollisionPolygon2D</span> <span class="nt">[forma trapezoidal]</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">6.3</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>padle_player.gd</code> y asígnalo.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="kw">extends</span> <span class="cls">CharacterBody2D</span>
+
+<span class="kw">const</span> <span class="var">SPEED</span> = <span class="num">600.0</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(<span class="var">delta</span>: <span class="cls">float</span>) -> <span class="kw">void</span>:
+    <span class="cmt"># get_axis devuelve -1 (izq), 0 (nada) o 1 (der)</span>
+    <span class="kw">var</span> <span class="var">direction</span> := <span class="cls">Input</span>.<span class="fn">get_axis</span>(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>)
+    
+    <span class="kw">if</span> <span class="var">direction</span>:
+        <span class="var">velocity</span>.<span class="var">x</span> = <span class="var">direction</span> * <span class="var">SPEED</span>
+    <span class="kw">else</span>:
+        <span class="cmt"># move_toward(valor_actual, destino, paso) — frena suavemente</span>
+        <span class="var">velocity</span>.<span class="var">x</span> = <span class="fn">move_toward</span>(<span class="var">velocity</span>.<span class="var">x</span>, <span class="num">0</span>, <span class="var">SPEED</span>)
+    
+    <span class="fn">move_and_slide</span>()
+</code></pre>
+
+      <div class="tip">
+        <strong>💡 <code>Input.get_axis()</code></strong>
+        Es la forma moderna de leer dos teclas opuestas en Godot 4. Devuelve un valor continuo
+        entre -1 y 1 — soporta también gamepad con sensibilidad analógica.
+        Equivale a hacer <code>izq - der</code> pero más limpio.
+      </div>
+
+      <div class="tip">
+        <strong>💡 <code>move_toward()</code></strong>
+        Acerca un valor a otro sin pasarse. Usado aquí para que la pala frene gradualmente
+        al soltar la tecla en lugar de parar en seco. Le pasamos la misma <code>SPEED</code>
+        como paso, lo que hace que la pala se detenga en exactamente 1 frame — comportamiento
+        responsivo pero sin tirones.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 7 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">07</div>
+      <div class="step-header-text">
+        <h3>Monta la escena principal (Main)</h3>
+        <p>Fondo, marcador, límites, pala, bola, cuadrícula de ladrillos y lógica de partida</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.1</div>
+        <div class="instruccion-text">
+          <strong>Nueva escena con nodo raíz <code>Node</code>.</strong>
+          <p>Renómbralo <code>Main</code>. Guarda como <code>scenes/main.tscn</code> y márcala como escena principal (<strong>Proyecto → Configuración → Application → Run → Main Scene</strong>).</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.2</div>
+        <div class="instruccion-text">
+          <strong>Añade el fondo.</strong>
+          <p>Añade un <code>ColorRect</code> como hijo. Anclado a toda la ventana (tamaño completo). Color: <code>#0f0f0f</code> (casi negro).</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.3</div>
+        <div class="instruccion-text">
+          <strong>Añade el marcador de puntuación.</strong>
+          <p>Añade un nodo <code>Label</code>, renómbralo <code>LabelScore</code>. Texto inicial: <code>000</code>. Tamaño de fuente: <code>300</code>. Color: blanco con alpha bajo (<code>rgba(255,255,255,0.45)</code>) para que quede como marca de agua de fondo. Posición centrada en la pantalla.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.4</div>
+        <div class="instruccion-text">
+          <strong>Añade los límites del campo de juego.</strong>
+          <p>Añade un <code>StaticBody2D</code> llamado <code>Limit</code>. Dentro, añade un <code>CollisionPolygon2D</code>. Define un polígono en forma de U invertida que cubra las tres paredes (izquierda, superior, derecha) pero deje el fondo abierto (aquí detectaremos la pérdida de la bola).</p>
+          <p style="margin-top:6px;">Puntos del polígono: <code>(0,720), (0,0), (1280,0), (1280,720), (1328,720), (1328,-40), (-48,-40), (-48,720)</code></p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.5</div>
+        <div class="instruccion-text">
+          <strong>Instancia la pala y la bola.</strong>
+          <p>Clic derecho en Main → Instanciar escena hijo → <code>padle_player.tscn</code>. Repite para <code>ball.tscn</code>. Las posiciones iniciales las gestionará el script, no importa dónde las dejes ahora.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.6</div>
+        <div class="instruccion-text">
+          <strong>Añade los Markers de posición inicial.</strong>
+          <p>Añade un nodo <code>Node</code> llamado <code>Markets</code>. Dentro, dos <code>Marker2D</code>:</p>
+          <ul style="margin-top:6px;">
+            <li><code>MarkerBall</code> → posición <code>(640, 256)</code> — dónde aparece la bola</li>
+            <li><code>MarkerPaddle</code> → posición <code>(640, 608)</code> — dónde aparece la pala</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>💡 ¿Para qué sirve un Marker2D?</strong>
+        Es un nodo sin forma ni lógica, simplemente marca una posición en la escena.
+        Lo usamos para definir los puntos de inicio de la bola y la pala de forma visual,
+        sin hardcodear coordenadas directamente en el código.
+        Si quieres cambiar dónde empiezan, solo mueves el Marker en el editor.
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.7</div>
+        <div class="instruccion-text">
+          <strong>Coloca la cuadrícula de ladrillos.</strong>
+          <p>Añade un nodo <code>Node</code> llamado <code>Bricks</code>. Instancia <code>brick.tscn</code> repetidamente (48 instancias, 12 columnas × 4 filas). Separación entre ladrillos: 88 píxeles horizontalmente, 24 verticalmente. Primera fila en Y=56, primera columna en X=160.</p>
+          <p style="margin-top:6px;">💡 Puedes seleccionar un ladrillo ya colocado, copiarlo (Ctrl+D) y posicionarlo manualmente, o usa la herramienta Grid Snap del editor.</p>
+        </div>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.8</div>
+        <div class="instruccion-text">
+          <strong>Añade el área de detección de bola perdida.</strong>
+          <p>Añade un <code>Area2D</code> llamado <code>AreaDown</code>. Dentro, un <code>CollisionShape2D</code> con un <code>RectangleShape2D</code> de <code>1379×46</code> en posición <code>(646, 760)</code> — justo debajo del borde inferior de la ventana.</p>
+        </div>
+      </div>
+
+      <div class="node-tree">
+📦 <span class="nn">Main</span> <span class="nt">[Node]</span> <span class="ns">← main.gd</span>
+├── <span class="nn">ColorRect</span> <span class="nt">[fondo negro]</span>
+├── <span class="nn">LabelScore</span> <span class="nt">[Label · fuente 300px]</span>
+├── <span class="nn">Limit</span> <span class="nt">[StaticBody2D · paredes]</span>
+│   └── <span class="nn">CollisionPolygon2D</span>
+├── <span class="nn">PadlePlayer</span> <span class="nt">[instancia padle_player.tscn]</span>
+├── <span class="nn">Ball</span> <span class="nt">[instancia ball.tscn]</span>
+├── <span class="nn">Bricks</span> <span class="nt">[Node]</span>
+│   ├── <span class="nn">Brick</span> <span class="nt">× 48 instancias</span>
+├── <span class="nn">Markets</span> <span class="nt">[Node]</span>
+│   ├── <span class="nn">MarkerBall</span> <span class="nt">[Marker2D · (640,256)]</span>
+│   └── <span class="nn">MarkerPaddle</span> <span class="nt">[Marker2D · (640,608)]</span>
+└── <span class="nn">AreaDown</span> <span class="nt">[Area2D · detector suelo]</span>
+    └── <span class="nn">CollisionShape2D</span>
+      </div>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.9</div>
+        <div class="instruccion-text">
+          <strong>Crea el script <code>main.gd</code> y asígnalo al nodo Main.</strong>
+        </div>
+      </div>
+
+<pre><span class="lang-label">GDScript</span><code><span class="cmt"># Nodo principal del juego — coordina bola, pala y puntuación</span>
+<span class="kw">extends</span> <span class="cls">Node</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="kw">void</span>:
+    <span class="cmt"># Al cargar la escena, lanzamos la partida automáticamente</span>
+    <span class="fn">play_game</span>()
+
+<span class="kw">func</span> <span class="fn">_process</span>(<span class="var">delta</span>: <span class="cls">float</span>) -> <span class="kw">void</span>:
+    <span class="cmt"># Actualizamos el marcador en cada frame</span>
+    $<span class="cls">LabelScore</span>.<span class="var">text</span> = <span class="fn">str</span>(<span class="cls">Global</span>.<span class="var">score</span>)
+
+<span class="kw">func</span> <span class="fn">play_game</span>() -> <span class="kw">void</span>:
+    <span class="cmt"># Coloca la pala y la bola en sus posiciones de inicio</span>
+    $<span class="cls">PadlePlayer</span>.<span class="var">position</span> = $<span class="cls">Markets</span>/<span class="cls">MarkerPaddle</span>.<span class="var">position</span>
+    $<span class="cls">Ball</span>.<span class="var">position</span>    = $<span class="cls">Markets</span>/<span class="cls">MarkerBall</span>.<span class="var">position</span>
+    <span class="cmt"># Arranca el movimiento de la bola</span>
+    $<span class="cls">Ball</span>.<span class="fn">start</span>()
+
+<span class="cmt"># Señal del AreaDown: la bola cayó — reiniciamos la partida</span>
+<span class="kw">func</span> <span class="fn">_on_area_down_body_entered</span>(<span class="var">body</span>: <span class="cls">Node2D</span>) -> <span class="kw">void</span>:
+    <span class="fn">play_game</span>()
+</code></pre>
+
+      <div class="instruccion">
+        <div class="instruccion-num">7.10</div>
+        <div class="instruccion-text">
+          <strong>Conecta la señal del AreaDown.</strong>
+          <p>Selecciona <code>AreaDown</code> → pestaña Nodo → señal <code>body_entered</code> → conecta a <code>_on_area_down_body_entered</code> en el nodo Main.</p>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ El marcador no reinicia al perder la bola.</strong>
+        Fíjate que <code>play_game()</code> no llama a <code>Global.reset_score()</code>.
+        Esto es intencionado: en esta versión la puntuación es acumulativa y no se resetea
+        al fallar. Si quieres que se reinicie, añade <code>Global.reset_score()</code>
+        dentro de <code>play_game()</code>.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PASO 8 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">08</div>
+      <div class="step-header-text">
+        <h3>¡Prueba el juego!</h3>
+        <p>Lista de verificación y errores frecuentes</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="instruccion">
+        <div class="instruccion-num">8.1</div>
+        <div class="instruccion-text">
+          <strong>Pulsa F5 y comprueba:</strong>
+          <ul style="margin-top:8px;">
+            <li>✅ La bola cae desde el centro al arrancar</li>
+            <li>✅ La pala se mueve con ← → y con A/D</li>
+            <li>✅ La bola rebota en las paredes y en la pala</li>
+            <li>✅ Al tocar un ladrillo este se desvanece y suma punto</li>
+            <li>✅ El número del marcador (fondo) aumenta</li>
+            <li>✅ Si la bola cae por el fondo, se reinicia la posición</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Los ladrillos no desaparecen al ser tocados.</strong>
+        Revisa que el nodo raíz de brick.tscn tiene asignado el grupo <code>brick_group</code>.
+        Sin ese grupo, <code>is_in_group("brick_group")</code> devuelve false y no se llama a <code>destroy_brick()</code>.
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ La bola atraviesa la pala.</strong>
+        Comprueba que el <code>CollisionPolygon2D</code> de la pala está correctamente definido
+        y que la bola tiene su <code>CollisionShape2D</code> activo. Asegúrate también de que
+        el Motion Mode de ambos CharacterBody2D está en <code>Floating</code>.
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Error en brick.gd: <code>queue_free</code> sin paréntesis.</strong>
+        Si al romper un ladrillo Godot da un error, revisa <code>finish_animation()</code>.
+        El código original tiene <code>queue_free</code> sin los paréntesis <code>()</code>.
+        Debe ser <code>queue_free()</code> con paréntesis para llamar la función correctamente.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="section-title">Resumen de Conceptos Trabajados</div>
+
+  <table>
+    <thead>
+      <tr><th>Concepto</th><th>Dónde lo usamos</th><th>Para qué sirve</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>StaticBody2D</strong></td>
+        <td>brick.tscn, Limit</td>
+        <td>Cuerpo físico inamovible; paredes y obstáculos</td>
+      </tr>
+      <tr>
+        <td><strong>motion_mode: Floating</strong></td>
+        <td>Ball, PadlePlayer</td>
+        <td>Permite movimiento libre en todas las direcciones (no solo vertical)</td>
+      </tr>
+      <tr>
+        <td><strong>move_and_collide()</strong></td>
+        <td>ball.gd</td>
+        <td>Detecta colisiones con acceso a la normal — necesario para calcular rebotes</td>
+      </tr>
+      <tr>
+        <td><strong>velocity.bounce(normal)</strong></td>
+        <td>ball.gd</td>
+        <td>Calcula el vector de rebote automáticamente a partir de la normal de impacto</td>
+      </tr>
+      <tr>
+        <td><strong>Groups (grupos)</strong></td>
+        <td>brick.tscn → "brick_group"</td>
+        <td>Etiquetar nodos para identificarlos sin necesitar una referencia directa</td>
+      </tr>
+      <tr>
+        <td><strong>Tween</strong></td>
+        <td>brick.gd</td>
+        <td>Animar propiedades de forma programática (fade-out del ladrillo)</td>
+      </tr>
+      <tr>
+        <td><strong>set_deferred()</strong></td>
+        <td>brick.gd</td>
+        <td>Modificar propiedades de física de forma segura fuera del ciclo de física</td>
+      </tr>
+      <tr>
+        <td><strong>@tool</strong></td>
+        <td>circule.gd</td>
+        <td>Ejecutar el script también en el editor, para previsualizar elementos visuales</td>
+      </tr>
+      <tr>
+        <td><strong>_draw()</strong></td>
+        <td>circule.gd</td>
+        <td>Dibujar formas geométricas por código sin imágenes externas</td>
+      </tr>
+      <tr>
+        <td><strong>Marker2D</strong></td>
+        <td>Main → Markets</td>
+        <td>Marcar posiciones de referencia en la escena sin lógica ni colisión</td>
+      </tr>
+      <tr>
+        <td><strong>CollisionPolygon2D</strong></td>
+        <td>PadlePlayer, Limit</td>
+        <td>Forma de colisión personalizada (polígono libre, no limitada a rect/círculo)</td>
+      </tr>
+      <tr>
+        <td><strong>Input.get_axis()</strong></td>
+        <td>padle_player.gd</td>
+        <td>Leer dos teclas opuestas como un eje con soporte para gamepad analógico</td>
+      </tr>
+      <tr>
+        <td><strong>move_toward()</strong></td>
+        <td>padle_player.gd</td>
+        <td>Acercar un valor a otro sin pasarse; útil para deceleración suave</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ACTIVIDADES DE AMPLIACIÓN -->
+  <div class="section-title">Actividades de Ampliación</div>
+
+  <div class="extra-grid">
+    <div class="extra-card">
+      <div class="dif dif-1">★☆☆ FÁCIL</div>
+      <h4>Cambia los colores</h4>
+      <p>Asigna colores distintos a cada fila de ladrillos modificando el <code>ColorRect</code> de cada instancia en la escena Main.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dif dif-1">★☆☆ FÁCIL</div>
+      <h4>Reinicio de puntuación</h4>
+      <p>Haz que la puntuación se ponga a 0 cuando la bola cae al fondo. Llama a <code>Global.reset_score()</code> dentro de <code>play_game()</code>.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dif dif-2">★★☆ MEDIO</div>
+      <h4>Vidas del jugador</h4>
+      <p>Añade una variable <code>lives = 3</code> en Global. Cada vez que la bola cae, resta una vida. Muéstralas en pantalla y termina el juego al llegar a 0.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dif dif-2">★★☆ MEDIO</div>
+      <h4>Velocidad progresiva</h4>
+      <p>Cada vez que se rompen 10 ladrillos, aumenta la <code>SPEED</code> de la bola un 10%. Añade un aviso en pantalla.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dif dif-3">★★★ DIFÍCIL</div>
+      <h4>Ladrillos de colores variables</h4>
+      <p>Crea una variable <code>@export var color: Color</code> en brick.gd. Desde main.gd asigna colores distintos a cada fila por código en <code>_ready()</code>.</p>
+    </div>
+    <div class="extra-card">
+      <div class="dif dif-3">★★★ DIFÍCIL</div>
+      <h4>Power-ups</h4>
+      <p>Al destruir ciertos ladrillos, crea un ítem que cae. Si la pala lo recoge, amplía su tamaño temporalmente usando un Tween sobre <code>scale.x</code>.</p>
+    </div>
+  </div>
+
+  <hr>
+  <p style="color:var(--text-muted); font-size:14px; text-align:center;">
+    Actividad generada mediante ingeniería inversa del proyecto <strong>godot-rompe-ladrillos-main</strong> · Godot 4.6 · FP · PMDM
+  </p>
+
+</div>
+</body>
+</html>
